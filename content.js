@@ -1,4 +1,3 @@
-/usr/local/Homebrew/Library/Homebrew/cmd/shellenv.sh: line 27: /bin/ps: Operation not permitted
 let refreshTimer = null;
 let countdownTimer = null;
 let badge = null;
