@@ -56,6 +56,21 @@ function isVisible(element) {
   return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
 }
 
+function safePageClick(element) {
+  if (!element) return false;
+  const href = element.getAttribute?.('href') || '';
+  if (/^\s*javascript:/i.test(href)) {
+    const preventJavascriptNavigation = (event) => event.preventDefault();
+    element.addEventListener('click', preventJavascriptNavigation, { capture: true, once: true });
+    element.dispatchEvent(new MouseEvent('click', {
+      bubbles: true, cancelable: true, composed: true, view: window
+    }));
+  } else {
+    element.click();
+  }
+  return true;
+}
+
 function findSelectControl(row) {
   return [...row.querySelectorAll('button, a, input[type="button"], input[type="submit"], [role="button"]')]
     .find((element) => {
@@ -117,7 +132,7 @@ function prepareCourseView(criteria) {
   if (categoryControl && !categoryReady) {
     if (categoryControl && Date.now() - lastNavigationClick > 1200) {
       lastNavigationClick = Date.now();
-      categoryControl.click();
+      safePageClick(categoryControl);
     }
     return false;
   }
@@ -127,7 +142,7 @@ function prepareCourseView(criteria) {
   if (typeControl && !typeReady) {
     if (typeControl && Date.now() - lastNavigationClick > 1200) {
       lastNavigationClick = Date.now();
-      typeControl.click();
+      safePageClick(typeControl);
     }
     return false;
   }
@@ -204,40 +219,6 @@ function courseRecordFromRow(row, criteria) {
   };
 }
 
-function clickConfirmationOnce() {
-  const modalSelectors = [
-    '.layui-layer', '.modal', '.modal-dialog', '.dialog',
-    '[role="dialog"]', '.el-message-box', '.ant-modal'
-  ];
-  const deadline = Date.now() + 5000;
-  const timer = setInterval(async () => {
-    const containers = [...document.querySelectorAll(modalSelectors.join(','))].filter(isVisible);
-    if (!containers.length) containers.push(document.body);
-    for (const container of containers) {
-      const confirm = [...container.querySelectorAll('button, a, [role="button"], input[type="button"]')]
-        .find((element) => ['确定', '确认'].includes(normalizedText(element) || normalizedText({ textContent: element.value })) && isVisible(element));
-      if (confirm) {
-        clearInterval(timer);
-        confirm.click();
-        await chrome.storage.local.set({ executionStatus: {
-          stage: 'confirmed',
-          message: '已点击“选课”并点击确认。请到“已选课程”页面核对最终结果。',
-          type: 'ok', updatedAt: Date.now()
-        }});
-        return;
-      }
-    }
-    if (Date.now() > deadline) {
-      clearInterval(timer);
-      await chrome.storage.local.set({ executionStatus: {
-        stage: 'clicked',
-        message: '已点击“选课”，但5秒内没有发现标准确认框。请查看当前页面或“已选课程”核对。',
-        type: 'ok', updatedAt: Date.now()
-      }});
-    }
-  }, 100);
-}
-
 async function attemptAutoSelect() {
   const response = await chrome.runtime.sendMessage({ type: 'GET_SENDER_TAB_ID' });
   const saved = await chrome.storage.local.get(['pendingAutoSelect', 'targetTabId', 'selectionCriteria']);
@@ -303,16 +284,15 @@ async function attemptAutoSelect() {
       await chrome.storage.local.set({
         pendingAutoSelect: false,
         lastSelectedCourse: selectedCourse,
-        selectionResult: `已找到符合“${criteriaLabel}”且未满的课程，并点击了选课按钮。请到“已选课程”核对结果。`,
+        selectionResult: `已找到符合“${criteriaLabel}”且未满的课程，并打开选课确认框。请手动点击“确定”或“取消”。`,
         executionStatus: {
-          stage: 'clicked',
-          message: `已找到符合“${criteriaLabel}”且未满的课程，并点击“选课”。请到“已选课程”核对结果。`,
+          stage: 'selection_confirmation',
+          message: `已找到符合“${criteriaLabel}”且未满的课程，并打开确认框。最终“确定”请你手动点击。`,
           type: 'ok', updatedAt: Date.now()
         }
       });
       match.row.style.outline = '3px solid #20a162';
-      match.control.click();
-      clickConfirmationOnce();
+      safePageClick(match.control);
       return;
     }
     if (Date.now() - lastProgressUpdate > 1000) {
