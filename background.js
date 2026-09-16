@@ -195,7 +195,14 @@ async function withdrawRecordedCourse(tabId, course) {
             .find((element) => normalize(element.innerText || element.textContent || element.value) === '退选' && visible(element));
           if (!button) continue;
           row.style.outline = '3px solid #d92d20';
-          button.click();
+          const href = button.getAttribute?.('href') || '';
+          if (/^\s*javascript:/i.test(href)) {
+            const preventJavascriptNavigation = (event) => event.preventDefault();
+            button.addEventListener('click', preventJavascriptNavigation, { capture: true, once: true });
+            button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, composed: true, view: window }));
+          } else {
+            button.click();
+          }
           return true;
         }
         return false;
