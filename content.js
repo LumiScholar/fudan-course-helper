@@ -219,6 +219,39 @@ function courseRecordFromRow(row, criteria) {
   };
 }
 
+function clickSelectionConfirmationOnce() {
+  const modalSelectors = [
+    '.layui-layer', '.modal', '.modal-dialog', '.dialog',
+    '[role="dialog"]', '.el-message-box', '.ant-modal'
+  ];
+  const deadline = Date.now() + 5000;
+  const timer = setInterval(async () => {
+    const containers = [...document.querySelectorAll(modalSelectors.join(','))].filter(isVisible);
+    if (!containers.length) containers.push(document.body);
+    for (const container of containers) {
+      const confirm = [...container.querySelectorAll('button, a, [role="button"], input[type="button"]')]
+        .find((element) => ['确定', '确认'].includes(normalizedText(element) || normalizedText({ textContent: element.value })) && isVisible(element));
+      if (!confirm) continue;
+      clearInterval(timer);
+      safePageClick(confirm);
+      await chrome.storage.local.set({ executionStatus: {
+        stage: 'confirmed',
+        message: '已自动点击“选课”和弹窗“确定”。请到“已选课程”页面核对最终结果。',
+        type: 'ok', updatedAt: Date.now()
+      }});
+      return;
+    }
+    if (Date.now() > deadline) {
+      clearInterval(timer);
+      await chrome.storage.local.set({ executionStatus: {
+        stage: 'clicked',
+        message: '已点击“选课”，但5秒内没有发现确认按钮。请查看当前网页。',
+        type: 'error', updatedAt: Date.now()
+      }});
+    }
+  }, 100);
+}
+
 async function attemptAutoSelect() {
   const response = await chrome.runtime.sendMessage({ type: 'GET_SENDER_TAB_ID' });
   const saved = await chrome.storage.local.get(['pendingAutoSelect', 'targetTabId', 'selectionCriteria']);
@@ -284,15 +317,16 @@ async function attemptAutoSelect() {
       await chrome.storage.local.set({
         pendingAutoSelect: false,
         lastSelectedCourse: selectedCourse,
-        selectionResult: `已找到符合“${criteriaLabel}”且未满的课程，并打开选课确认框。请手动点击“确定”或“取消”。`,
+        selectionResult: `已找到符合“${criteriaLabel}”且未满的课程，正在自动完成选课确认。`,
         executionStatus: {
           stage: 'selection_confirmation',
-          message: `已找到符合“${criteriaLabel}”且未满的课程，并打开确认框。最终“确定”请你手动点击。`,
+          message: `已找到符合“${criteriaLabel}”且未满的课程，正在点击“选课”和弹窗“确定”。`,
           type: 'ok', updatedAt: Date.now()
         }
       });
       match.row.style.outline = '3px solid #20a162';
       safePageClick(match.control);
+      clickSelectionConfirmationOnce();
       return;
     }
     if (Date.now() - lastProgressUpdate > 1000) {
