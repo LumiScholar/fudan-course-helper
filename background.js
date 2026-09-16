@@ -80,11 +80,18 @@ async function clickLabelInFrame(tabId, frameId, label) {
       for (const eventName of ['pointerdown', 'mousedown', 'pointerup', 'mouseup']) {
         target.dispatchEvent(new MouseEvent(eventName, { bubbles: true, cancelable: true, view: window }));
       }
-      target.click();
+      const href = target.getAttribute?.('href') || '';
+      if (/^\s*javascript:/i.test(href)) {
+        const preventJavascriptNavigation = (event) => event.preventDefault();
+        target.addEventListener('click', preventJavascriptNavigation, { capture: true, once: true });
+        target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+      } else {
+        target.click();
+      }
       return {
         clicked: true,
         tag: target.tagName,
-        href: target.getAttribute?.('href') || '',
+        href,
         hasOnclick: Boolean(target.onclick || target.getAttribute?.('onclick'))
       };
     }
