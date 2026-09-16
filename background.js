@@ -1,4 +1,3 @@
-/usr/local/Homebrew/Library/Homebrew/cmd/shellenv.sh: line 27: /bin/ps: Operation not permitted
 let navigationGeneration = 0;
 
 const CATEGORY_LABELS = ['学位公共课', '学科专业课', '公共选修课', '其他可选课程'];
