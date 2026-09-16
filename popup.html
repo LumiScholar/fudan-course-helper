@@ -1,0 +1,93 @@
+/usr/local/Homebrew/Library/Homebrew/cmd/shellenv.sh: line 27: /bin/ps: Operation not permitted
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>复旦选课定时刷新与点选</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <h1>复旦选课定时刷新与点选 <small id="version"></small></h1>
+    <p class="hint">请先打开并登录选课页面，再设定刷新时间。</p>
+
+    <label for="refreshTime">刷新时间（按电脑本地时间）</label>
+    <input id="refreshTime" type="datetime-local" step="1">
+    <div class="test-delay">
+      <label for="testSeconds">测试延迟（秒）</label>
+      <input id="testSeconds" type="number" min="1" max="300" step="1" value="5">
+      <button id="oneMinuteLater" class="quick-time" type="button">按设定秒数测试</button>
+    </div>
+
+    <fieldset>
+      <legend>我要选择的课程</legend>
+      <label>课程大类
+        <select id="courseCategory">
+          <option value="学位公共课" selected>学位公共课</option>
+          <option value="学科专业课">学科专业课</option>
+          <option value="公共选修课">公共选修课</option>
+          <option value="其他可选课程">其他可选课程</option>
+        </select>
+      </label>
+      <label>页面内的课程类型
+        <select id="courseType"></select>
+      </label>
+      <button id="syncNow" class="quick-time" type="button">同步到选课页面</button>
+      <p class="field-hint sync-hint">选择上面两项时，当前复旦选课页面会同步切换，但不会执行选课。</p>
+      <label>课程名称或课程代码
+        <input id="courseKeyword" type="text" placeholder="例如 习近平著作选读 或 GEIP40014">
+      </label>
+      <p class="field-hint">支持部分关键词匹配；建议填写唯一课程代码，或足够独特的课程名片段。</p>
+
+      <div class="subheading">可选的附加条件</div>
+      <div class="two-cols">
+        <label>星期
+          <select id="weekday">
+            <option value="">不限星期</option>
+            <option value="星期一">星期一</option>
+            <option value="星期二">星期二</option>
+            <option value="星期三">星期三</option>
+            <option value="星期四">星期四</option>
+            <option value="星期五">星期五</option>
+            <option value="星期六">星期六</option>
+            <option value="星期日">星期日</option>
+          </select>
+        </label>
+        <label>节次
+          <input id="periods" type="text" placeholder="例如 2~5；不限制可留空">
+        </label>
+      </div>
+      <label>校区关键词（可留空）
+        <input id="campus" type="text" placeholder="例如 江湾校区">
+      </label>
+      <p class="field-hint">星期、节次和校区均非必填；若使用时间筛选，星期和节次需同时填写。</p>
+    </fieldset>
+
+    <label class="check-row">
+      <input id="autoSelect" type="checkbox" checked>
+      <span>刷新后自动点选</span>
+    </label>
+    <div class="rule">
+      仅选择同时符合以下条件的第一行：<br>
+      ① 成功切换到你设置的课程大类和类型<br>
+      ② 课程名称或代码及附加条件全部符合<br>
+      ③ 容量显示“未满”且存在“选课”按钮
+    </div>
+
+    <button id="start" class="primary">开始等待</button>
+    <button id="cancel" class="secondary">取消任务</button>
+
+    <section class="withdraw-box">
+      <strong>刚才点选的课程</strong>
+      <div id="lastCourse">尚无记录</div>
+      <button id="withdrawLast" class="danger" type="button" disabled>退选刚才课程</button>
+      <p class="field-hint">只会精确匹配上次记录的课程代码并点击“退选”；网页弹出的最终“确定”由你手动操作。</p>
+    </section>
+
+    <section id="status" aria-live="polite">正在读取状态……</section>
+    <p class="warning">到点前请保持选课标签页打开，电脑不要休眠。插件只刷新并点选一次，不会循环操作。</p>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
