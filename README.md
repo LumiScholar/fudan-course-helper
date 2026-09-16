@@ -1,4 +1,3 @@
-/usr/local/Homebrew/Library/Homebrew/cmd/shellenv.sh: line 27: /bin/ps: Operation not permitted
 # 复旦研究生选课定时刷新助手
 
 一个 Manifest V3 Chrome 扩展，用于在复旦大学研究生选课页面设置单次定时刷新，并按用户填写的条件定位课程。
