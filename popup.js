@@ -23,6 +23,9 @@ const COURSE_TYPES = {
   '其他可选课程': ['其他可选课程']
 };
 
+const COURSE_HOSTS = new Set(['yjsxk.fudan.sh.cn', 'yjsxk.fudan.edu.cn']);
+const isCourseHost = (hostname) => COURSE_HOSTS.has((hostname || '').toLowerCase());
+
 function pad(value) {
   return String(value).padStart(2, '0');
 }
@@ -62,7 +65,7 @@ oneMinuteLaterButton.addEventListener('click', () => {
 async function getActiveTab() {
   const tabs = await chrome.tabs.query({});
   const courseTabs = tabs.filter((tab) => {
-    try { return new URL(tab.url).hostname === 'yjsxk.fudan.sh.cn'; } catch { return false; }
+    try { return isCourseHost(new URL(tab.url).hostname); } catch { return false; }
   });
   courseTabs.sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
   return courseTabs[0] || null;
@@ -84,7 +87,7 @@ async function syncPageToSelection() {
   const tab = await getActiveTab();
   let url;
   try { url = new URL(tab?.url); } catch { url = null; }
-  if (!url || url.hostname !== 'yjsxk.fudan.sh.cn') {
+  if (!url || !isCourseHost(url.hostname)) {
     showStatus('如需同步切换，请先打开复旦选课页面。你的选项仍会保留。', 'error');
     return;
   }
@@ -257,7 +260,7 @@ startButton.addEventListener('click', async () => {
   const tab = await getActiveTab();
   let url;
   try { url = new URL(tab.url); } catch { url = null; }
-  if (!url || url.hostname !== 'yjsxk.fudan.sh.cn') {
+  if (!url || !isCourseHost(url.hostname)) {
     showStatus('请先切换到复旦研究生选课页面，再点击“开始等待”。', 'error');
     return;
   }
