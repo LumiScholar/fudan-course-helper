@@ -1,12 +1,14 @@
 {
   "manifest_version": 3,
   "name": "复旦选课定时刷新与点选",
-  "version": "2.2.3",
+  "version": "2.2.4",
   "description": "定时刷新复旦研究生选课页面，切换课程类型并按自定义条件单次点选课程。",
   "permissions": ["storage", "activeTab", "scripting", "tabs"],
   "host_permissions": [
     "http://yjsxk.fudan.sh.cn/*",
-    "https://yjsxk.fudan.sh.cn/*"
+    "https://yjsxk.fudan.sh.cn/*",
+    "http://yjsxk.fudan.edu.cn/*",
+    "https://yjsxk.fudan.edu.cn/*"
   ],
   "action": {
     "default_title": "复旦选课定时刷新与点选",
@@ -19,7 +21,9 @@
     {
       "matches": [
         "http://yjsxk.fudan.sh.cn/*",
-        "https://yjsxk.fudan.sh.cn/*"
+        "https://yjsxk.fudan.sh.cn/*",
+        "http://yjsxk.fudan.edu.cn/*",
+        "https://yjsxk.fudan.edu.cn/*"
       ],
       "js": ["content.js"],
       "run_at": "document_idle",
